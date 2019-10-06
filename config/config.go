@@ -14,7 +14,9 @@ import (
 )
 
 type Logic struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	UpName string `json:"-"`
+	Num    string `json:"num"`
 }
 
 type myconf struct {
@@ -37,17 +39,25 @@ func init() {
 
 	bytes, e := ioutil.ReadFile("cli_config.yml")
 	if e != nil {
-		panic(e.Error())
+		log.Fatal(e)
 	}
 
 	e = yaml.Unmarshal(bytes, Conf)
 	if e != nil {
-		panic(e.Error())
+		log.Fatal(e)
 	}
 }
 
 var conf = `
-# Cli Config
+# Kvass 生成配置文件
 app:
-  - name: ""
+  -
+    name: "gin"    # 第一层为分发层
+    num: 1          # 开启线程数
+  -
+    name: "cc1"    # 普通层  复数
+    num: 2
+  -
+    name: "cc2"
+    num: 3
 `

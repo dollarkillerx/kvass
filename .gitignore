@@ -12,3 +12,4 @@
 *.out
 .idea
 client/client
+test/testpath/client

@@ -31,3 +31,175 @@ redis:
   idle_timeout: 300 # 最大超时时间(s)
   port: "127.0.0.1:6379"
 `
+
+// 分发url temp
+var ReptileDistribution = `
+/**
+ * @Author: DollarKiller
+ * @Description: 由 Kvass cli生成
+ * @Github: https://github.com/dollarkillerx
+ * @Date: Create in {{.Time}}
+ */
+package reptile
+
+import (
+	"fmt"
+	"github.com/dollarkillerx/easyutils/clog"
+)
+
+type GenerateUrl struct {
+}
+
+// url 生成器
+func (p *GenerateUrl) ParserUrl(url chan interface{}) {
+	baseUrl := "base html %v"
+	for i := 2; i <= 100; i++ {
+		spr := fmt.Sprintf(baseUrl, i)
+		url <- spr
+	}
+
+	// 生成完毕关掉chan
+	clog.Println("第一阶段完毕")
+	close(url)
+}
+`
+
+// 处理单个tmp
+var ReptileItem = `
+/**
+ * @Author: DollarKiller
+ * @Description: 由 Kvass cli生成
+ * @Github: https://github.com/dollarkillerx
+ * @Date: Create in {{.Time}}
+ */
+package reptile
+
+import (
+	"github.com/dollarkillerx/easyutils/clog"
+	"sync"
+)
+
+// parser home
+type {{.FunName}} struct {
+}
+
+func (p *{{.FunName}}) ParserItem(ch1 chan interface{}, ch2 chan interface{}) {
+	numch := make(chan int, {{.Num}})
+	sy := sync.WaitGroup{}
+cc:
+	for {
+		select {
+		case ur, ok := <-ch1:
+			if ok {
+				// 开启多协程
+				numch <- 1
+				sy.Add(1)
+				go func(ur interface{}) {
+					defer func() {
+						<-numch
+						sy.Done()
+					}()
+					p.logic(ur, ch2)
+
+				}(ur)
+
+			} else {
+				sy.Wait()
+				clog.Println("第{{.Nu}}阶段完毕")
+				close(ch2)
+				break cc
+			}
+		}
+	}
+}
+
+func (p *{{.FunName}}) logic(data interface{}, ch chan interface{}) {
+	ch <- "test"
+}
+`
+
+var EngineTemp = `
+/**
+ * @Author: DollarKiller
+ * @Description: 由 Kvass cli生成
+ * @Github: https://github.com/dollarkillerx
+ * @Date: Create in {{.Time}}
+ */
+package fetcher
+
+import (
+	"{{.Package}}/reptile"
+)
+
+// 分发url
+type ParserUrl interface {
+	ParserUrl(chan interface{})
+}
+
+// 解析url
+type ParserItem interface {
+	ParserItem(chan interface{}, chan interface{})
+}
+
+type Reptile struct {
+	{{range $k,$v := .Maps}}
+	{{$v.Name}}Ch chan interface{}
+	{{end}}
+	{{range $k,$v := .Maps}}
+		{{if eq $k 0}}
+	GenerateUrl ParserUrl
+		{{else}}
+	{{$v.Name}} ParserItem
+		{{end}}
+	{{end}}
+}
+
+// 中央控制
+func ReptileEngine() {
+	{{range $k,$v := .Maps}}
+		{{if eq $k 0}}
+	url := reptile.GenerateUrl{}    // url 生成器
+		{{else}}
+	{{$v.Name}} := reptile.{{$v.UpName}}{}
+		{{end}}
+	{{end}}
+	i := Reptile{
+		{{range $k,$v := .Maps}}
+		{{$v.Name}}Ch: make(chan interface{}, 15),
+		{{end}}
+
+		{{range $k,$v := .Maps}}
+			{{if eq $k 0}}
+		GenerateUrl: &url,
+			{{else}}
+		{{$v.Name}}: &{{$v.Name}},
+			{{end}}
+		{{end}}
+	}
+	{{range $k,$v := .Maps}}
+		{{if eq $k 0}}
+	go i.GenerateUrl.ParserUrl(i.{{$v.Name}}Ch)
+		{{else if eq $k $.EndNum}}
+	go i.{{$v.Name}}.ParserItem(i.{{pxy $k $.Maps}}Ch, i.{{$v.Name}}Ch)
+	<-i.{{$v.Name}}Ch
+		{{else if ne $k $.EndNum}}
+	go i.{{$v.Name}}.ParserItem(i.{{pxy $k $.Maps}}Ch, i.{{$v.Name}}Ch)	
+		{{end}}
+	{{end}}
+}
+`
+var MainTemp = `
+/**
+ * @Author: DollarKiller
+ * @Description: 由 Kvass cli生成
+ * @Github: https://github.com/dollarkillerx
+ * @Date: Create in {{.Time}}
+ */
+package main
+
+import "{{.Package}}/fetcher"
+
+func main() {
+	fetcher.ReptileEngine()
+}
+`

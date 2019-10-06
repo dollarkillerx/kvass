@@ -11,6 +11,9 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 /**
@@ -39,7 +42,20 @@ func main() {
 
 	app.Action = func(c *cli.Context) error {
 		if opt.PackagePath == "" {
-			
+			goPath := os.Getenv("GOPATH")
+			exeFilePath, err := filepath.Abs(os.Args[0])
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			if runtime.GOOS == "windows" {
+				exeFilePath = strings.Replace(exeFilePath, "\\", "/", -1)
+			}
+
+			goPath = goPath + "/src/"
+			data := strings.Replace(exeFilePath, goPath, "", -1)
+			opt.PackagePath = data
 		}
 		err := clientMag.Run(&opt)
 		if err != nil {

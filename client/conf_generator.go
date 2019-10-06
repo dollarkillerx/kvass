@@ -11,24 +11,18 @@ import (
 	"github.com/dollarkillerx/easyutils/clog"
 	"github.com/dollarkillerx/kvass/client/temp"
 	"log"
-	"os"
 )
 
 type confGenerator struct {
 }
 
 func (c *confGenerator) Run(opt *Option) error {
-	file, e := os.OpenFile("config/config.go", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 00755)
-	if e != nil {
-		log.Fatal(e)
-	}
-
 	byt, e := easyutils.Base64Decode(temp.ConfTemp)
 	if e != nil {
 		log.Fatal(e)
 	}
 
-	e = WiteGen(file, string(byt), &IMap{"Time": easyutils.TimeGetNowTimeStr()})
+	e = WiteGen("config/config.go", string(byt), &IMap{"Time": easyutils.TimeGetNowTimeStr()})
 	if e != nil {
 		clog.PrintWa(e)
 		log.Fatal("err 程序运行异常")

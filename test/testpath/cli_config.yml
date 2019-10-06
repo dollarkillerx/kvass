@@ -1,0 +1,11 @@
+# Kvass 生成配置文件
+app:
+  -
+    name: "gin"    # 第一层为分发层
+    num: 1          # 开启线程数
+  -
+    name: "cc1"    # 普通层  复数
+    num: 2
+  -
+    name: "cc2"
+    num: 3

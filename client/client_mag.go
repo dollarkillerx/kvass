@@ -7,6 +7,7 @@
 package main
 
 import (
+	"github.com/dollarkillerx/kvass/config"
 	"log"
 	"os"
 	"sync"
@@ -28,6 +29,11 @@ type generatorMgr struct {
 func (c *generatorMgr) Run(opt *Option) error {
 	// 创建目录
 	c.createDirectory()
+	c.genMap.Range(func(key, value interface{}) bool {
+		generator := value.(Generator)
+		generator.Run(opt)
+		return true
+	})
 	return nil
 }
 
@@ -59,8 +65,19 @@ func Register(name string, generator Generator) {
 }
 
 // 写入
-func WiteGen(file *os.File, data string, metaData *IMap) error {
+func WiteGen(filename string, data string, metaData *IMap) error {
+	file, e := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 00755)
+	if e != nil {
+		return e
+	}
 	i := template.New("config")
+	i.Funcs(template.FuncMap{
+		"pxy": pxy,
+	})
 	i.Parse(string(data))
 	return i.Execute(file, metaData)
+}
+
+func pxy(num int, maps []*config.Logic) string {
+	return maps[num-1].Name
 }

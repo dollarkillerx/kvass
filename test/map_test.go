@@ -7,6 +7,7 @@
 package test
 
 import (
+	"fmt"
 	"github.com/dollarkillerx/easyutils"
 	"log"
 	"os"
@@ -71,5 +72,69 @@ func TestPath(t *testing.T) {
 	} else {
 		log.Fatal(err)
 	}
-
 }
+
+func TestPcc(t *testing.T) {
+	ti := "ffc"
+	title := capitalize(ti)
+	log.Println(title)
+}
+
+func capitalize(str string) string {
+	var upperStr string
+	vv := []rune(str) // 后文有介绍
+	for i := 0; i < len(vv); i++ {
+		if i == 0 {
+			if vv[i] >= 97 && vv[i] <= 122 { // 后文有介绍
+				vv[i] -= 32 // string的码表相差32位
+				upperStr += string(vv[i])
+			} else {
+				fmt.Println("Not begins with lowercase letter,")
+				return str
+			}
+		} else {
+			upperStr += string(vv[i])
+		}
+	}
+	return upperStr
+}
+
+func TestTemp(t *testing.T) {
+	data := []string{
+		"Hello",
+		"TTc",
+	}
+	file, e := os.OpenFile("test.html", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 00755)
+	if e != nil {
+		log.Fatal(e)
+	}
+	i := template.New("test")
+	i.Funcs(template.FuncMap{"tep": testHtml})
+	i.Parse(testhtml)
+	e = i.Execute(file, map[string]interface{}{
+		"data": data,
+	})
+	if e != nil {
+		log.Fatal(e)
+	}
+}
+
+func testHtml(num int, data []string) string {
+	return data[num+1]
+}
+
+var testhtml = `
+	// this is data
+	{{range $k,$v := .data}}
+		{{if eq $k 0}}
+			{{tep $k $.data}}
+		{{end}}		
+	{{end}}
+	// end
+`
+
+var c = `
+{{if eq $k 0}}
+{{$k $.data | tep}}
+{{end}}
+`
